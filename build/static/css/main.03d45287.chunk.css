@@ -1,0 +1,2 @@
+.notification,html{font-family:Arial}.notification{width:240px;padding:20px 16px;margin:10px 0;font-size:.9rem;box-shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06);overflow:hidden;border-radius:4px;background:#fff;color:#000;display:flex;justify-content:center;align-items:center;visibility:hidden}.notification.error{background:linear-gradient(0deg,#d7290f,#af2c23);color:#fff;visibility:visible}.notification.success{background:linear-gradient(0deg,#2b8e3b,#427d36);color:#fff;visibility:visible}
+/*# sourceMappingURL=main.03d45287.chunk.css.map */
