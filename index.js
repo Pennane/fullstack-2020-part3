@@ -30,35 +30,37 @@ const getById = (req, res, next) => {
     .catch((error) => next(error))
 }
 
-const update = (req, res, next) => {
+const updateById = (req, res, next) => {
+  console.log('updating by id')
   const { name, number } = req.body
+  console.log(name)
   const { id } = req.params
 
+  console.log(name, number, id)
+
+  if (!id) {
+    return next(new Error('Missing id'))
+  }
+
   if (!name || !number) {
     return next(new Error('Missing name or number'))
   }
 
-  if (id) {
-    Phonenumber.findByIdAndUpdate({ id }, { name: name, number: number }, { new: true })
-      .then((updatedNumber) => res.json(updatedNumber))
-      .catch((error) => next(error))
-  } else {
-    Phonenumber.findOneAndUpdate({ name }, { number }, { new: true })
-      .then((updatedNumber) => res.json(updatedNumber))
-      .catch((error) => next(error))
-  }
+  Phonenumber.findByIdAndUpdate(
+    id,
+    { name: name, number: number },
+    { new: true, runValidators: true, context: 'query' }
+  )
+    .then((updatedNumber) => res.json(updatedNumber))
+    .catch((error) => next(error))
 }
 
-const add = async (req, res, next) => {
+const add = (req, res, next) => {
   const { name, number } = req.body
 
   if (!name || !number) {
     return next(new Error('Missing name or number'))
   }
-
-  const oldPhonenumber = await Phonenumber.findOne({ name: name })
-
-  if (oldPhonenumber) return update(req, res, next)
 
   const phonenumber = new Phonenumber({
     name,
@@ -67,18 +69,14 @@ const add = async (req, res, next) => {
 
   phonenumber
     .save()
-    .then((savedNumber) => {
-      res.json(savedNumber)
-    })
+    .then((savedNumber) => res.json(savedNumber))
     .catch((error) => next(error))
 }
 
 const remove = (req, res, next) => {
   const { id } = req.params
   Phonenumber.findByIdAndRemove(id)
-    .then((result) => {
-      res.status(204).end()
-    })
+    .then((result) => res.status(204).end())
     .catch((error) => next(error))
 }
 
@@ -88,7 +86,7 @@ app.get('/api/persons/:id', getById)
 
 app.put('/api/persons/', add)
 
-app.put('/api/persons/:id', update)
+app.put('/api/persons/:id', updateById)
 
 app.delete('/api/persons/:id', remove)
 
@@ -99,7 +97,7 @@ app.get('/info', async (req, res, next) => {
         <h1>Info</h1>
         <p>Phonebook has info for ${numberCount} people</p>
         <p>Received at ${new Date()}</p>
-    `
+  `
 
   res.send(view)
 })
@@ -109,8 +107,16 @@ const errorHandler = (error, req, res, next) => {
     return res.status(400).send({ error: 'missing name or number' })
   }
 
+  if (error.message === 'Missing id') {
+    return res.status(400).send({ error: 'missing id' })
+  }
+
   if (error.name === 'CastError') {
     return res.status(400).send({ error: 'malformatted id' })
+  }
+
+  if (error.name === 'ValidationError') {
+    return res.status(400).send({ error: error.message })
   }
 
   next(error)

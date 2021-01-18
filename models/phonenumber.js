@@ -1,6 +1,14 @@
 const mongoose = require('mongoose')
+const uniqueValidator = require('mongoose-unique-validator')
 
 const url = process.env.MONGODB_URI
+
+const validateByMinLength = (minLength = 0) => {
+  return {
+    validator: (value) => value && value.length >= minLength,
+    message: `Field is shorter than the minimum allowed length of ${minLength} characters`
+  }
+}
 
 mongoose
   .connect(url, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false, useCreateIndex: true })
@@ -12,11 +20,11 @@ mongoose
   })
 
 const phonenumberSchema = new mongoose.Schema({
-  name: String,
-  number: String,
-  date: Date,
-  id: Number
+  name: { type: String, required: true, unique: true, validate: validateByMinLength(3) },
+  number: { type: String, required: true, validate: validateByMinLength(8) }
 })
+
+phonenumberSchema.plugin(uniqueValidator)
 
 phonenumberSchema.set('toJSON', {
   transform: (document, returnedObject) => {

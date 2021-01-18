@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const uniqueValidator = require('mongoose-unique-validator')
 
 function syntaxHelp() {
   console.log('Provide all arguments\nmongo.js <password> <name> <number>\nor\nmongo.js <password>')
@@ -24,11 +25,11 @@ mongoose.connect(url, {
 })
 
 const phonenumberSchema = new mongoose.Schema({
-  name: String,
-  number: String,
-  date: Date,
-  id: Number
+  name: { type: String, required: true, unique: true },
+  number: { type: String, required: true }
 })
+
+phonenumberSchema.plugin(uniqueValidator)
 
 const Phonenumber = mongoose.model('Number', phonenumberSchema)
 
