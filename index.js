@@ -13,19 +13,40 @@ app.use(express.json())
 app.use(morgan(':method :url :status :response-time ms :body'))
 app.use(express.static('build'))
 
+const getAll = (req, res, next) => {
+  Phonenumber.find({}).then((persons) => res.json(persons))
+}
+
+const getById = (req, res, next) => {
+  const { id } = req.params
+  Phonenumber.findById(id)
+    .then((phonenumber) => {
+      if (phonenumber) {
+        res.json(phonenumber)
+      } else {
+        res.status(404).end()
+      }
+    })
+    .catch((error) => next(error))
+}
+
 const update = (req, res, next) => {
   const { name, number } = req.body
+  const { id } = req.params
 
   if (!name || !number) {
     return next(new Error('Missing name or number'))
   }
 
-  Phonenumber.findOneAndUpdate({ name }, { number }, { new: true })
-    .then((updatedNumber) => {
-      console.log(updatedNumber)
-      res.json(updatedNumber)
-    })
-    .catch((error) => next(error))
+  if (id) {
+    Phonenumber.findByIdAndUpdate({ id }, { name: name, number: number }, { new: true })
+      .then((updatedNumber) => res.json(updatedNumber))
+      .catch((error) => next(error))
+  } else {
+    Phonenumber.findOneAndUpdate({ name }, { number }, { new: true })
+      .then((updatedNumber) => res.json(updatedNumber))
+      .catch((error) => next(error))
+  }
 }
 
 const add = async (req, res, next) => {
@@ -61,30 +82,13 @@ const remove = (req, res, next) => {
     .catch((error) => next(error))
 }
 
-const get = (req, res, next) => {
-  const { id } = req.params
-  Phonenumber.findById(id)
-    .then((phonenumber) => {
-      if (phonenumber) {
-        res.json(phonenumber)
-      } else {
-        res.status(404).end()
-      }
-    })
-    .catch((error) => next(error))
-}
-
-const getAll = (req, res, next) => {
-  Phonenumber.find({}).then((persons) => {
-    res.json(persons)
-  })
-}
-
 app.get('/api/persons', getAll)
 
-app.get('/api/persons/:id', get)
+app.get('/api/persons/:id', getById)
 
 app.put('/api/persons/', add)
+
+app.put('/api/persons/:id', update)
 
 app.delete('/api/persons/:id', remove)
 
